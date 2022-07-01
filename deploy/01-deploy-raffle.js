@@ -3,30 +3,47 @@ const { network, ethers } = require("hardhat")
 const { networkConfig, developmentChains } = require("../helper-hardhat-config")
 const { verify } = require("../utils/verify")
 
+const VRF_SUB_FUND_AMOUNT = ethers.utils.parseEther("2")
+
 module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
+    let vrfCoordinatorAddress, subscriptionId
 
-    /* Deply Mocks if testnet 
-        or 
-    Read address from mainnet */
-    let vrfCoordinatorAddress
     if (developmentChains.includes(network.name)) {
-        const mockChainlinkVRF = await deployments.get("MockChainlinkVRF")
-        vrfCoordinatorAddress = mockChainlinkVRF.address
-        const txResponse = await mockChainlinkVRF.createSubscription()
-        const txRecept = await
+        log("Read VRFCoordinatorV2Mock from local testnet ")
+        const vrgCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
+        vrfCoordinatorAddress = vrgCoordinatorV2Mock.address
+        log("Create Subscription for Mock in local testnet")
+        const txResponse = await vrgCoordinatorV2Mock.createSubscription()
+        const txReceipt = await txResponse.wait(1)
+        subscriptionId = txReceipt.events[0].args.subId
+        await vrgCoordinatorV2Mock.fundSubscription(subscriptionId, VRF_SUB_FUND_AMOUNT)
     } else {
+        log("Read VRFCoordinatorV2Mock from mainnet or real testnet")
         vrfCoordinatorAddress = await networkConfig[chainId]["VRFCoordinatorV2Mock"]
+        subscriptionId = networkConfig[chainId]["subscriptionId"]
     }
 
     const entranceFee = networkConfig[chainId]["entranceFee"]
     const gasLane = networkConfig[chainId]["gasLane"]
+    const callbackGasLimit = networkConfig[chainId]["callbackGasLimit"]
+    const interval = networkConfig[chainId]["interval"]
+    const vrfCoordinatorToken = networkConfig[chainId]["vrfCoordinatorToken"]
 
-    const deployArgs = [vrfCoordinatorAddress, entranceFee, gasLane]
+    const deployArgs = [
+        vrfCoordinatorToken,
+        vrfCoordinatorAddress,
+        entranceFee,
+        gasLane,
+        subscriptionId,
+        callbackGasLimit,
+        interval,
+    ]
 
     /* Deply contract */
+    log("Deploy Raffle contract")
     const raffle = await deploy("Raffle", {
         from: deployer,
         args: deployArgs,
@@ -36,7 +53,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
     /* Verify contract */
     log("Contract deployed!")
-    if (!developmentChain.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
+
+    if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY) {
         await verify(raffle.address, deployArgs)
     }
     log("----------------------------------------------------------")

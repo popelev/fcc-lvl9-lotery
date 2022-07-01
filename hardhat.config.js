@@ -15,6 +15,7 @@ const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY
 module.exports = {
     defaultNetwork: "hardhat",
     networks: {
+        hardhat: {},
         rinkeby: {
             url: RINKEBY_RPC_URL || "",
             accounts: [PRIVATE_KEY],
@@ -34,15 +35,18 @@ module.exports = {
         apiKey: ETHERSCAN_API_KEY,
     },
     solidity: "0.8.7",
-    namedAccouns: {
+    namedAccounts: {
         deployer: {
             default: 0,
+            deployer: 0,
         },
         player1: {
             default: 1,
+            player1: 1,
         },
         player2: {
             default: 2,
+            player2: 2,
         },
     },
 }
