@@ -4,10 +4,11 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-error Selfdistruct__TokenAmountNotZero();
-
 contract Selfdistructable is Ownable {
     address payable public defaultToken;
+    string constant BYE = "ByeBye";
+
+    event Selfdistruct(string);
 
     constructor(address token) public payable {
         defaultToken = payable(token);
@@ -31,10 +32,10 @@ contract Selfdistructable is Ownable {
             withdrawToken(defaultToken);
             empty = emptyERC20(defaultToken);
         }
-        if (empty || force) {
-            selfdestruct(payable(owner()));
-        } else {
-            revert Selfdistruct__TokenAmountNotZero();
-        }
+
+        require((empty || force), "Token Amount Not Zero");
+
+        emit Selfdistruct(BYE);
+        selfdestruct(payable(owner()));
     }
 }

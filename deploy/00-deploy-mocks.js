@@ -7,15 +7,24 @@ const GAS_PRICE_LINK = 1e9
 module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
-    const deployArgs = [BASE_FEE, GAS_PRICE_LINK]
 
     if (developmentChains.includes(network.name)) {
         log("local network detected! deploying mocks...")
+
+        const ERC20_deployArgs = ["ERC20Mock", "MCK", deployer, 100]
+        await deploy("ERC20Mock", {
+            contract: "ERC20Mock",
+            from: deployer,
+            log: true,
+            args: ERC20_deployArgs,
+        })
+
+        const VRF_deployArgs = [BASE_FEE, GAS_PRICE_LINK]
         await deploy("VRFCoordinatorV2Mock", {
             contract: "VRFCoordinatorV2Mock",
             from: deployer,
             log: true,
-            args: deployArgs,
+            args: VRF_deployArgs,
         })
         log("Mocks deployed!")
         log("----------------------------------------------------------")

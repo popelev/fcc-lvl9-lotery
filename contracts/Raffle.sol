@@ -68,7 +68,7 @@ contract Raffle is Selfdistructable, VRFConsumerBaseV2, KeeperCompatibleInterfac
         i_interval = interval;
     }
 
-    function enterRuffle() public payable {
+    function enterRaffle() public payable {
         if (msg.value < i_entranceFee) {
             revert Raffle__NotEnoughETHEntered();
         }
@@ -149,6 +149,10 @@ contract Raffle is Selfdistructable, VRFConsumerBaseV2, KeeperCompatibleInterfac
         return i_entranceFee;
     }
 
+    function getInterval() public view returns (uint256) {
+        return i_interval;
+    }
+
     function getPlayer(uint256 index) public view returns (address) {
         return s_players[index];
     }
@@ -177,5 +181,7 @@ contract Raffle is Selfdistructable, VRFConsumerBaseV2, KeeperCompatibleInterfac
         return REQUEST_CONFIRMATION;
     }
 
-    /* Modifyer */
+    function getVRFCoordinatorAddress() public view returns (address) {
+        return address(i_vrfCoordinator);
+    }
 }

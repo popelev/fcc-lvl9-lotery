@@ -15,7 +15,6 @@ const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY
 module.exports = {
     defaultNetwork: "hardhat",
     networks: {
-        hardhat: {},
         rinkeby: {
             url: RINKEBY_RPC_URL || "",
             accounts: [PRIVATE_KEY],

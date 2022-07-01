@@ -9,7 +9,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
-    let vrfCoordinatorAddress, subscriptionId
+    let vrfCoordinatorAddress, subscriptionId, vrfCoordinatorToken
 
     if (developmentChains.includes(network.name)) {
         log("Read VRFCoordinatorV2Mock from local testnet ")
@@ -20,17 +20,21 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         const txReceipt = await txResponse.wait(1)
         subscriptionId = txReceipt.events[0].args.subId
         await vrgCoordinatorV2Mock.fundSubscription(subscriptionId, VRF_SUB_FUND_AMOUNT)
+
+        log("Read ERC20Mock from local testnet")
+        const erc20Mock = await ethers.getContract("ERC20Mock")
+        vrfCoordinatorToken = erc20Mock.address
     } else {
         log("Read VRFCoordinatorV2Mock from mainnet or real testnet")
         vrfCoordinatorAddress = await networkConfig[chainId]["VRFCoordinatorV2Mock"]
         subscriptionId = networkConfig[chainId]["subscriptionId"]
+        vrfCoordinatorToken = networkConfig[chainId]["vrfCoordinatorToken"]
     }
 
     const entranceFee = networkConfig[chainId]["entranceFee"]
     const gasLane = networkConfig[chainId]["gasLane"]
     const callbackGasLimit = networkConfig[chainId]["callbackGasLimit"]
     const interval = networkConfig[chainId]["interval"]
-    const vrfCoordinatorToken = networkConfig[chainId]["vrfCoordinatorToken"]
 
     const deployArgs = [
         vrfCoordinatorToken,
