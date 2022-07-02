@@ -18,7 +18,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
             log: true,
             args: ERC20_deployArgs,
         })
-
+        log("ERC20Mock deployed!")
         const VRF_deployArgs = [BASE_FEE, GAS_PRICE_LINK]
         await deploy("VRFCoordinatorV2Mock", {
             contract: "VRFCoordinatorV2Mock",
@@ -26,7 +26,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
             log: true,
             args: VRF_deployArgs,
         })
-        log("Mocks deployed!")
+        log("VRFCoordinatorV2Mock deployed!")
         log("----------------------------------------------------------")
     }
 }

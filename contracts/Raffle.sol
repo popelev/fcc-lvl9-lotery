@@ -20,7 +20,10 @@ error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint25
  *  @notice This is for creating an untamperable decentralized smart contract
  *  @dev This implements Chainlink VRF v2 and chainlink Keepers
  */
-contract Raffle is Selfdistructable, VRFConsumerBaseV2, KeeperCompatibleInterface {
+contract Raffle is
+    VRFConsumerBaseV2,
+    KeeperCompatibleInterface //Selfdistructable
+{
     /* Enums */
     enum RaffleState {
         OPEN,
@@ -57,15 +60,16 @@ contract Raffle is Selfdistructable, VRFConsumerBaseV2, KeeperCompatibleInterfac
         uint64 subscriptionId,
         uint32 callbackGasLimit,
         uint256 interval
-    ) Selfdistructable(vrfCoordinatorToken) VRFConsumerBaseV2(vrfCoordinator) {
-        i_entranceFee = entranceFee;
+    ) VRFConsumerBaseV2(vrfCoordinator) {
+        //Selfdistructable(vrfCoordinatorToken)
         i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinator);
         i_gasLane = gasLane;
+        i_interval = interval;
         i_subscriptionId = subscriptionId;
+        i_entranceFee = entranceFee;
         i_callbackGasLimit = callbackGasLimit;
         s_raffleState = RaffleState.OPEN;
         s_lastTimeStamp = block.timestamp;
-        i_interval = interval;
     }
 
     function enterRaffle() public payable {
@@ -89,20 +93,22 @@ contract Raffle is Selfdistructable, VRFConsumerBaseV2, KeeperCompatibleInterfac
      *  4. The lotery should be an "open" state.
      */
     function checkUpkeep(
-        bytes memory /*checkData*/
+        bytes memory /* checkData */
     )
         public
+        view
         override
         returns (
             bool upkeepNeeded,
-            bytes memory /*performData*/
+            bytes memory /* performData */
         )
     {
-        bool isOpen = (RaffleState.OPEN == s_raffleState);
+        bool isOpen = RaffleState.OPEN == s_raffleState;
         bool timePassed = ((block.timestamp - s_lastTimeStamp) > i_interval);
-        bool hasPlayers = (s_players.length > 0);
+        bool hasPlayers = s_players.length > 0;
         bool hasBalance = address(this).balance > 0;
-        upkeepNeeded = (isOpen && timePassed && hasPlayers && hasBalance);
+        upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers);
+        return (upkeepNeeded, "0x0"); // can we comment this out?
     }
 
     function performUpkeep(

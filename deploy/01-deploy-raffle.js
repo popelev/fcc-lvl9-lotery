@@ -17,8 +17,10 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         vrfCoordinatorAddress = vrgCoordinatorV2Mock.address
         log("Create Subscription for Mock in local testnet")
         const txResponse = await vrgCoordinatorV2Mock.createSubscription()
-        const txReceipt = await txResponse.wait(1)
+        const txReceipt = await txResponse.wait()
         subscriptionId = txReceipt.events[0].args.subId
+        // Fund the subscription
+        // Our mock makes it so we don't actually have to worry about sending fund
         await vrgCoordinatorV2Mock.fundSubscription(subscriptionId, VRF_SUB_FUND_AMOUNT)
 
         log("Read ERC20Mock from local testnet")
@@ -30,20 +32,19 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         subscriptionId = networkConfig[chainId]["subscriptionId"]
         vrfCoordinatorToken = networkConfig[chainId]["vrfCoordinatorToken"]
     }
-
-    const entranceFee = networkConfig[chainId]["entranceFee"]
-    const gasLane = networkConfig[chainId]["gasLane"]
-    const callbackGasLimit = networkConfig[chainId]["callbackGasLimit"]
-    const interval = networkConfig[chainId]["interval"]
+    const waitBlockConfirmations = developmentChains.includes(network.name)
+        ? 1
+        : VERIFICATION_BLOCK_CONFIRMATIONS
+    log("----------------------------------------------------")
 
     const deployArgs = [
         vrfCoordinatorToken,
         vrfCoordinatorAddress,
-        entranceFee,
-        gasLane,
+        networkConfig[chainId]["entranceFee"],
+        networkConfig[chainId]["gasLane"],
         subscriptionId,
-        callbackGasLimit,
-        interval,
+        networkConfig[chainId]["callbackGasLimit"],
+        networkConfig[chainId]["interval"],
     ]
 
     /* Deply contract */
@@ -52,7 +53,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         from: deployer,
         args: deployArgs,
         log: true,
-        waitConformations: network.config.blockConformations || 1,
+        waitConformations: waitBlockConfirmations,
     })
 
     /* Verify contract */

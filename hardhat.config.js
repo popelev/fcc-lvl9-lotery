@@ -48,4 +48,7 @@ module.exports = {
             player2: 2,
         },
     },
+    mocha: {
+        timeout: 900000,
+    },
 }
