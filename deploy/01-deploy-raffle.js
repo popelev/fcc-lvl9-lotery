@@ -3,14 +3,14 @@ const { network, ethers } = require("hardhat")
 const { networkConfig, developmentChains } = require("../helper-hardhat-config")
 const { verify } = require("../utils/verify")
 
-const VRF_SUB_FUND_AMOUNT = ethers.utils.parseEther("2")
+const VRF_SUB_FUND_AMOUNT = ethers.utils.parseEther("100")
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
-    let vrfCoordinatorAddress, subscriptionId, vrfCoordinatorToken
-
+    let vrfCoordinatorAddress, vrfCoordinatorToken
+    let subscriptionId = 0
     if (developmentChains.includes(network.name)) {
         log("Read VRFCoordinatorV2Mock from local testnet ")
         const vrgCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
@@ -46,7 +46,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         networkConfig[chainId]["callbackGasLimit"],
         networkConfig[chainId]["interval"],
     ]
-
+    log("VRFCoordinatorV2Args " + deployArgs)
     /* Deply contract */
     log("Deploy Raffle contract")
     const raffle = await deploy("Raffle", {

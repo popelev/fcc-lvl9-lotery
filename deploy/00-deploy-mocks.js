@@ -12,14 +12,18 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         log("local network detected! deploying mocks...")
 
         const ERC20_deployArgs = ["ERC20Mock", "MCK", deployer, 100]
+        log("ERC20_deployArgs " + ERC20_deployArgs)
         await deploy("ERC20Mock", {
             contract: "ERC20Mock",
             from: deployer,
             log: true,
             args: ERC20_deployArgs,
         })
-        log("ERC20Mock deployed!")
+        log("ERC20Args deployed!")
+        log("----------------------------------------------------------")
+
         const VRF_deployArgs = [BASE_FEE, GAS_PRICE_LINK]
+        log("VRF_deployArgs " + VRF_deployArgs)
         await deploy("VRFCoordinatorV2Mock", {
             contract: "VRFCoordinatorV2Mock",
             from: deployer,

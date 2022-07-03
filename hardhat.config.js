@@ -33,7 +33,7 @@ module.exports = {
     etherscan: {
         apiKey: ETHERSCAN_API_KEY,
     },
-    solidity: "0.8.7",
+    solidity: "0.8.9",
     namedAccounts: {
         deployer: {
             default: 0,
@@ -49,6 +49,6 @@ module.exports = {
         },
     },
     mocha: {
-        timeout: 900000,
+        timeout: 200000,
     },
 }

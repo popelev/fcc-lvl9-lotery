@@ -2,7 +2,7 @@
 // Winner to be selected every X minutes (automaticly restart) by Chainlink Keper
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity 0.8.9;
 
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
@@ -20,12 +20,9 @@ error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint25
  *  @notice This is for creating an untamperable decentralized smart contract
  *  @dev This implements Chainlink VRF v2 and chainlink Keepers
  */
-contract Raffle is
-    VRFConsumerBaseV2,
-    KeeperCompatibleInterface //Selfdistructable
-{
+contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface, Selfdistructable {
     /* Enums */
-    enum RaffleState {
+    enum RaffleState1 {
         OPEN,
         CALCULATING
     }
@@ -42,7 +39,7 @@ contract Raffle is
 
     /* Lotery varible */
     address private s_recentWinner;
-    RaffleState s_raffleState;
+    RaffleState1 s_raffleState;
     uint256 private s_lastTimeStamp;
     uint256 private immutable i_interval;
 
@@ -60,15 +57,14 @@ contract Raffle is
         uint64 subscriptionId,
         uint32 callbackGasLimit,
         uint256 interval
-    ) VRFConsumerBaseV2(vrfCoordinator) {
-        //Selfdistructable(vrfCoordinatorToken)
+    ) VRFConsumerBaseV2(vrfCoordinator) Selfdistructable(vrfCoordinatorToken) {
         i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinator);
         i_gasLane = gasLane;
         i_interval = interval;
         i_subscriptionId = subscriptionId;
         i_entranceFee = entranceFee;
         i_callbackGasLimit = callbackGasLimit;
-        s_raffleState = RaffleState.OPEN;
+        s_raffleState = RaffleState1.OPEN;
         s_lastTimeStamp = block.timestamp;
     }
 
@@ -76,7 +72,7 @@ contract Raffle is
         if (msg.value < i_entranceFee) {
             revert Raffle__NotEnoughETHEntered();
         }
-        if (s_raffleState != RaffleState.OPEN) {
+        if (s_raffleState != RaffleState1.OPEN) {
             revert Raffle__NotOpen();
         }
         s_players.push(payable(msg.sender));
@@ -103,12 +99,12 @@ contract Raffle is
             bytes memory /* performData */
         )
     {
-        bool isOpen = RaffleState.OPEN == s_raffleState;
+        bool isOpen = RaffleState1.OPEN == s_raffleState;
         bool timePassed = ((block.timestamp - s_lastTimeStamp) > i_interval);
         bool hasPlayers = s_players.length > 0;
         bool hasBalance = address(this).balance > 0;
-        upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers);
-        return (upkeepNeeded, "0x0"); // can we comment this out?
+        upkeepNeeded = (isOpen && hasBalance && hasPlayers); //timePassed &&
+        return (upkeepNeeded, "0x0");
     }
 
     function performUpkeep(
@@ -122,7 +118,7 @@ contract Raffle is
                 uint256(s_raffleState)
             );
         }
-        s_raffleState = RaffleState.CALCULATING;
+        s_raffleState = RaffleState1.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_gasLane,
             i_subscriptionId,
@@ -140,7 +136,7 @@ contract Raffle is
         uint256 indexOfWinner = randomWords[0] % s_players.length;
         address payable recentWinner = s_players[indexOfWinner];
         s_recentWinner = recentWinner;
-        s_raffleState = RaffleState.OPEN;
+        s_raffleState = RaffleState1.OPEN;
         s_players = new address payable[](0);
         s_lastTimeStamp = block.timestamp;
         (bool success, ) = recentWinner.call{value: address(this).balance}("");
@@ -167,7 +163,7 @@ contract Raffle is
         return s_recentWinner;
     }
 
-    function getRaffleState() public view returns (RaffleState) {
+    function getRaffleState() public view returns (RaffleState1) {
         return s_raffleState;
     }
 
